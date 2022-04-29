@@ -4,56 +4,12 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
-
-# useful for handling different item types with a single interface
-from itemadapter import is_item, ItemAdapter
 import random
 from scrapy.http import HtmlResponse
-# class MidleproSpiderMiddleware:
-#     # Not all methods need to be defined. If a method is not defined,
-#     # scrapy acts as if the spider middleware does not modify the
-#     # passed objects.
-#
-#     @classmethod
-#     def from_crawler(cls, crawler):
-#         # This method is used by Scrapy to create your spiders.
-#         s = cls()
-#         crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
-#         return s
-#
-#     def process_spider_input(self, response, spider):
-#         # Called for each response that goes through the spider
-#         # middleware and into the spider.
-#
-#         # Should return None or raise an exception.
-#         return None
-#
-#     def process_spider_output(self, response, result, spider):
-#         # Called with the results returned from the Spider, after
-#         # it has processed the response.
-#
-#         # Must return an iterable of Request, or item objects.
-#         for i in result:
-#             yield i
-#
-#     def process_spider_exception(self, response, exception, spider):
-#         # Called when a spider or process_spider_input() method
-#         # (from other spider middleware) raises an exception.
-#
-#         # Should return either None or an iterable of Request or item objects.
-#         pass
-#
-#     def process_start_requests(self, start_requests, spider):
-#         # Called with the start requests of the spider, and works
-#         # similarly to the process_spider_output() method, except
-#         # that it doesn’t have a response associated.
-#
-#         # Must return only requests (not items).
-#         for r in start_requests:
-#             yield r
-#
-#     def spider_opened(self, spider):
-#         spider.logger.info('Spider opened: %s' % spider.name)
+import time
+# useful for handling different item types with a single interface
+from itemadapter import is_item, ItemAdapter
+
 useragent_list=[
 "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36 OPR/26.0.1656.60",
 "Opera/8.0 (Windows NT 5.1; U; en)",
@@ -119,8 +75,54 @@ useragent_list=[
 "Openwave/ UCWEB7.0.2.37/28/999",
 "Openwave/ UCWEB7.0.2.37/28/999"
 ]
+# class WangyiproSpiderMiddleware:
+#     # Not all methods need to be defined. If a method is not defined,
+#     # scrapy acts as if the spider middleware does not modify the
+#     # passed objects.
+#
+#     @classmethod
+#     def from_crawler(cls, crawler):
+#         # This method is used by Scrapy to create your spiders.
+#         s = cls()
+#         crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
+#         return s
+#
+#     def process_spider_input(self, response, spider):
+#         # Called for each response that goes through the spider
+#         # middleware and into the spider.
+#
+#         # Should return None or raise an exception.
+#         return None
+#
+#     def process_spider_output(self, response, result, spider):
+#         # Called with the results returned from the Spider, after
+#         # it has processed the response.
+#
+#         # Must return an iterable of Request, or item objects.
+#         for i in result:
+#             yield i
+#
+#     def process_spider_exception(self, response, exception, spider):
+#         # Called when a spider or process_spider_input() method
+#         # (from other spider middleware) raises an exception.
+#
+#         # Should return either None or an iterable of Request or item objects.
+#         pass
+#
+#     def process_start_requests(self, start_requests, spider):
+#         # Called with the start requests of the spider, and works
+#         # similarly to the process_spider_output() method, except
+#         # that it doesn’t have a response associated.
+#
+#         # Must return only requests (not items).
+#         for r in start_requests:
+#             yield r
+#
+#     def spider_opened(self, spider):
+#         spider.logger.info('Spider opened: %s' % spider.name)
 
-class MidleproDownloaderMiddleware:
+
+class WangyiproDownloaderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.
@@ -131,7 +133,6 @@ class MidleproDownloaderMiddleware:
     #     s = cls()
     #     crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
     #     return s
-    #拦截正常的请求
 
     def process_request(self, request, spider):
         # Called for each request that goes through the downloader
@@ -143,10 +144,7 @@ class MidleproDownloaderMiddleware:
         # - or return a Request object
         # - or raise IgnoreRequest: process_exception() methods of
         #   installed downloader middleware will be called
-        request.headers['User-Agent'] = random.choice(useragent_list)
-        print('当前user-agent:', request.headers['User-Agent'])
-        request.meta['proxy']='http://116.63.93.172:8081'
-        print(request.meta['proxy'])
+        request.headers['User-Agent']=random.choice(useragent_list)
         return None
 
     def process_response(self, request, response, spider):
@@ -156,8 +154,20 @@ class MidleproDownloaderMiddleware:
         # - return a Response object
         # - return a Request object
         # - or raise IgnoreRequest
+        if request.url in spider.module_url_list:
+            #print(request.url)
+            bro=spider.bro
+            bro.get(request.url)
+            js='window.scrollTo(0,document.body.scrollHeight)'
+            time.sleep(3)
+            bro.execute_script(js)
+            page_text=bro.page_source
+            new_response=HtmlResponse(url=request.url,body=page_text,encoding='utf-8',request=request)
+            return new_response
+
         return response
-    #拦截异常请求
+
+
     def process_exception(self, request, exception, spider):
         # Called when a download handler or a process_request()
         # (from other downloader middleware) raises an exception.
